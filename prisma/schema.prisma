@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// Learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Speed up queries or scale easily with serverless or edge functions with Prisma Accelerate:
+// https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id // Primary key with auto-generated UUID
+  email             String    @unique
+  password          String
+  fullname          String
+  emailVerifyCode   String
+  verifyCodeExpiry  DateTime
+  image             String?
+  isEmailVerified   Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  last_login        DateTime?
+  last_logout       DateTime?
+  pdf_upload_count  Int       @default(0)
+  notice_generate_count Int   @default(0)
+  last_upload       DateTime?
+  last_response     DateTime?
+
+  // Relationship fields
+  activities        UserActivity[]
+  currentData       UserCurrentData[]
+}
+
+model UserActivity {
+  Activityid            String    @id // Primary key with auto-generated UUID
+  userId                String
+  pdf_hosted_link       String
+  pdf_hosted_time       DateTime @default(now())
+  pdf_questions         String
+  pdf_answers           String
+  notice_response       String
+  notice_generate_time  DateTime? @default(now())
+
+  // Foreign key relationship to User
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model UserCurrentData {
+  DataId            String    @id// Primary key with auto-generated UUID
+  userId            String
+  current_question  String
+  current_answer    String
+  current_notice    String
+
+  // Foreign key relationship to User
+  user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
