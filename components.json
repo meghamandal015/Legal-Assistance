@@ -15,6 +15,9 @@
     "utils": "@/lib/utils",
     "ui": "@/components/ui",
     "examples": "@/components/examples",
-    "blocks": "@/components/blocks"
-  }
+    "blocks": "@/components/blocks",
+    "lib": "@/lib",
+    "hooks": "@/hooks"
+  },
+  "iconLibrary": "lucide"
 }

@@ -3,10 +3,8 @@ import prisma from "@/lib/prisma";
 export async function POST(request: Request) {
     try {
         const { userID } = await request.json();
-        console.log('User ID: ', userID);
 
         const dataId = "CD" + userID;
-        console.log('Data ID: ', dataId);
 
         const existingData = await prisma.userCurrentData.findFirst({
             where: {

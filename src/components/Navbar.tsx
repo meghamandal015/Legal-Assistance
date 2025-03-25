@@ -1,73 +1,122 @@
-"use client"; // Add this at the very top
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { useRouter, usePathname } from "next/navigation";
 
-import { useSession } from "next-auth/react"
+interface UserProfileIconProps {
+  username: string;
+  size?: 'sm' | 'md' | 'lg';
+}
 
-const Navbar: React.FC = () => {
+const UserProfileIcon: React.FC<UserProfileIconProps> = ({ username = '', size = 'md' }) => {
+  const names = username.trim().split(/\s+/);
+  const firstInitial = names[0]?.[0]?.toUpperCase() ?? '';
+  const lastInitial = names.length > 1 ? names[names.length - 1]?.[0]?.toUpperCase() ?? '' : '';
+  const initials = firstInitial + lastInitial;
+
+  const sizeClasses = {
+    sm: 'w-8 h-8 text-xs',
+    md: 'w-10 h-10 text-sm',
+    lg: 'w-12 h-12 text-base'
+  };
+
+  return (
+    <div className={`relative inline-flex items-center justify-center overflow-hidden bg-blue-700 rounded-full ${sizeClasses[size]}`}>
+      <span className="font-medium text-white">{initials}</span>
+    </div>
+  );
+};
+
+export default function Navbar() {
   const { data: session, status } = useSession();
-
-  const [scrolled, setScrolled] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const currentPath = usePathname();
+
+  const handleNavigation = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
+    const href = event.currentTarget.getAttribute('href');
+    if (href && href !== currentPath) {
+      setIsLoading(true);
+    }
+  };
 
   useEffect(() => {
-    const handleSessionChange = () => {
-      console.log("Session status changed:", status);
-    };
-
-    window.addEventListener("sessionChange", handleSessionChange);
-    return () => window.removeEventListener("sessionChange", handleSessionChange);
-  }, [status]);
-
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 0);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
+    if (status === "unauthenticated") {
+      router.refresh();
+    }
+  }, [status, router]);
 
   const links = [
     { title: "Home", href: "/" },
     { title: "About Us", href: "/aboutUs" },
     { title: "Latest", href: "/latest" },
+    { title: "Reply History", href: "/history" },
     { title: "Contact", href: "/contact" },
   ];
 
   return (
-    <nav
-      className={`fixed w-full z-50 transition-all duration-300 ${
-        scrolled ? "bg-opacity-80 backdrop-blur-md" : "bg-transparent"
-      } bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-600`}
-      style={{ minHeight: '70px' }} // Reduced height to 70px
-    >
-      <div className="container mx-auto flex items-center justify-between py-3 px-6">
-        {/* Logo */}
-        <div className="flex items-center">
-          <Link href="/">
-            <Image
-              src="/logo.png" // Replace with your logo path
-              alt="Logo"
-              className="hover:opacity-80 transition-opacity duration-300"
-              width={80}
-              height={40}
-            />
-          </Link>
+    <nav className="fixed w-full z-50 bg-gradient-to-r from-blue-500 to-indigo-500 shadow-md">
+      {isLoading && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-700 border-solid"></div>
+        </div>
+      )}
+      <div className="container mx-auto flex items-center justify-between py-4 px-6 md:px-12 relative">
+        <Link href="/">
+          <Image
+            src="/logo.png"
+            alt="Logo"
+            className="hover:opacity-80 transition-opacity duration-300"
+            width={65}
+            height={65}
+          />
+        </Link>
+
+        <div className="absolute left-1/2 transform -translate-x-1/2 hidden md:flex items-center space-x-8">
+          {links.map((link) => (
+            <Link
+              key={link.title}
+              href={link.href}
+              onClick={handleNavigation}
+              className="text-base font-medium text-white transition-all duration-300 hover:text-blue-200 hover:-translate-y-1 transform"
+            >
+              {link.title}
+            </Link>
+          ))}
         </div>
 
-        {/* Hamburger Menu Button for Mobile */}
+        <div className="hidden md:flex items-center space-x-4 absolute right-6">
+          {!session ? (
+            <Link href="/auth/sign-in" onClick={handleNavigation}>
+              <button
+                className="cursor-pointer px-5 py-2 bg-[#222] text-white rounded-lg font-medium hover:bg-[#333] transition-all duration-300"
+                aria-label="Sign In"
+              >
+                Sign In
+              </button>
+            </Link>
+          ) : (
+            <div className="flex items-center space-x-3">
+              <p className="text-sm font-semibold text-white whitespace-nowrap">
+                Hi, {session.user?.fullname}
+              </p>
+              <Link href="/profile" onClick={handleNavigation}>
+                <UserProfileIcon username={session.user?.fullname || ''} size="md" />
+              </Link>
+            </div>
+          )}
+        </div>
+
         <div className="md:hidden">
           <button
-            className="text-white focus:outline-none"
             onClick={() => setIsOpen(!isOpen)}
+            className="text-white focus:outline-none"
+            aria-label="Toggle Menu"
           >
-            {/* Hamburger Icon */}
             <svg
               className="w-6 h-6"
               fill="none"
@@ -84,104 +133,46 @@ const Navbar: React.FC = () => {
             </svg>
           </button>
         </div>
+      </div>
 
-        {/* Links for larger screens */}
-        <div className={`hidden md:flex items-center space-x-8`}>
-          {links.map((link) => (
-            <Link key={link.title} href={link.href} className="text-white font-semibold transition-transform duration-300 hover:-translate-y-1 hover:shadow-lg">
-              {link.title}
-            </Link>
-          ))}
-        </div>
-
-        {/* Sign In / Sign Up Buttons for larger screens */}
-        <div> 
-          {!session ? (
-            <div className="hidden md:flex items-center space-x-4">
-              <Link href="/auth/sign-in">
-                <button className="relative inline-flex items-center justify-center p-0.5 mb-2 me-2 overflow-hidden text-sm font-medium rounded-lg group bg-black text-white focus:ring-4 focus:outline-none focus:ring-purple-300 dark:focus:ring-purple-800 transition-all  active:bg-black active:text-white hover:-translate-y-1 hover:shadow-lg transform ease-in-out duration-300">
-                  <span className="relative px-5 py-2.5 transition-all ease-in duration-75 bg-gray-900 rounded-md">
-                    Sign In
-                  </span>
+      {isOpen && (
+        <div className="md:hidden bg-gradient-to-r from-blue-600 to-indigo-600 border-t border-blue-500">
+          <div className="flex flex-col items-center space-y-4 py-4">
+            {links.map((link) => (
+              <Link
+                key={link.title}
+                href={link.href}
+                className="text-base font-medium text-white hover:text-blue-200 transition-all duration-300 hover:-translate-y-1 transform"
+                onClick={() => setIsOpen(false)}
+              >
+                {link.title}
+              </Link>
+            ))}
+            {!session ? (
+              <Link href="/auth/sign-in" onClick={handleNavigation}>
+                <button
+                  className="px-5 py-2 bg-[#222] text-white rounded-lg font-medium hover:bg-[#333] transition-all duration-300"
+                  aria-label="Mobile Sign In"
+                >
+                  Sign In
                 </button>
               </Link>
-            </div>
-          ): (
-            <div className="flex gap-2">
-              <p className="relative font-bold text-white text-lg">Hi, {session.user?.fullname}</p>
-              <Link href="/profile">
-                <Image
-                    src="/user_icon.png"
-                    alt="Logo"
-                    className="hover:opacity-80 transition-opacity duration-300"
-                    width={40}
-                    height={40}
-                    style={{ maxWidth: "100%", height: "auto" }}
-                  />
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile Menu */}
-        <div
-          className={`${
-            isOpen ? "block" : "hidden"
-          } md:hidden absolute top-full left-0 w-full bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-600 text-center`}
-        >
-          {/* Mobile Links */}
-          {links.map((link) => (
-            <Link 
-              key={link.title} 
-              href={link.href} 
-              className="block py-[10px] text-white font-semibold transition-transform duration-&lsqb;300ms&rsqb hover:-translate-y-[1px] hover:shadow-lg"
-              onClick={() => setIsOpen(false)}  
-            >
-              {link.title}
-            </Link>
-          ))}
-
-          {/* Mobile Sign In / Sign Up Buttons */}
-          <div className="py-[10px] flex flex-col items-center space-y-[10px]">
-            
-            {/* Reuse the same button styles for mobile */}
-            
-            <Link href="/auth/sign-in">
-              <button className="relative inline-flex items-center justify-center p-[0.5rem] mb-[2rem] me-auto ms-auto overflow-hidden text-sm font-medium rounded-lg group 
-                bg-black text-white 
-                focus:ring-[4px] focus:outline-none focus:ring-purple-[800]
-                transition-all duration-[300ms]
-                active:bg-black active:text-white
-                hover:-translate-y-[1px] hover:shadow-lg transform ease-in-out"
-                onClick={() => setIsOpen(false)} 
+            ) : (
+              <Link href="/profile" onClick={handleNavigation}>
+                <div
+                  className="flex items-center space-x-2"
+                  onClick={() => setIsOpen(false)}
                 >
-                   <span className= 'relative px-[20px] py-[10px] bg-gray-[900] rounded-md'>
-                    Sign In
-                   </span>
-              </button>
-              
-            </Link>
-
-             {/* Same for sign-up
-             <Link href="/auth/sign-up">
-               <button className="relative inline-flex items-center justify-center p-[0.5rem] mb-[2rem] me-auto ms-auto overflow-hidden text-sm font-medium rounded-lg group 
-                 bg-black text-white 
-                 focus:ring-[4px] focus:outline-none focus:ring-purple-[800]
-                 transition-all duration-[300ms]
-                 active:bg-black active:text-white
-                 hover:-translate-y-[1px] hover:shadow-lg transform ease-in-out"
-                 onClick={() => setIsOpen(false)} 
-                 >
-                   <span className= 'relative px-[20px] py-[10px] bg-gray-[900] rounded-md'>
-                     Sign Up
-                   </span>
-               </button>
-             </Link> */}
-           </div>
-         </div>
-       </div>
-     </nav>
-   );
-};
-
-export default Navbar;
+                  <p className="text-sm font-semibold text-white whitespace-nowrap">
+                    Hi, {session.user?.fullname}
+                  </p>
+                  <UserProfileIcon username={session.user?.fullname || ''} size="sm" />
+                </div>
+              </Link>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
+}

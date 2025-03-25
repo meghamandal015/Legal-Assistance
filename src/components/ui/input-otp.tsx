@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { OTPInput, OTPInputContext } from "input-otp"
-import { Dot } from "lucide-react"
+import { Minus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -34,20 +34,15 @@ const InputOTPSlot = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div"> & { index: number }
 >(({ index, className, ...props }, ref) => {
-  const inputOTPContext = React.useContext(OTPInputContext);
-  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index];
+  const inputOTPContext = React.useContext(OTPInputContext)
+  const { char, hasFakeCaret, isActive } = inputOTPContext.slots[index]
 
   return (
     <div
       ref={ref}
       className={cn(
-        `relative flex h-12 w-12 items-center justify-center 
-         border border-white bg-transparent text-white text-lg 
-         rounded-md transition-all duration-200 
-         focus-within:bg-gradient-to-r focus-within:from-yellow-400 focus-within:to-orange-500 
-         focus-within:ring-2 focus-within:ring-yellow-500 
-         caret-white selection:bg-gradient-to-r selection:from-yellow-400 selection:to-orange-500 selection:text-black`,
-        isActive && "z-10",
+        "relative flex h-9 w-9 items-center justify-center border-y border-r border-input text-sm shadow-sm transition-all first:rounded-l-md first:border-l last:rounded-r-md",
+        isActive && "z-10 ring-1 ring-ring",
         className
       )}
       {...props}
@@ -55,21 +50,20 @@ const InputOTPSlot = React.forwardRef<
       {char}
       {hasFakeCaret && (
         <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-5 w-px animate-caret-blink bg-white" />
+          <div className="h-4 w-px animate-caret-blink bg-foreground duration-1000" />
         </div>
       )}
     </div>
-  );
-});
-InputOTPSlot.displayName = "InputOTPSlot";
-
+  )
+})
+InputOTPSlot.displayName = "InputOTPSlot"
 
 const InputOTPSeparator = React.forwardRef<
   React.ElementRef<"div">,
   React.ComponentPropsWithoutRef<"div">
 >(({ ...props }, ref) => (
   <div ref={ref} role="separator" {...props}>
-    <Dot />
+    <Minus />
   </div>
 ))
 InputOTPSeparator.displayName = "InputOTPSeparator"

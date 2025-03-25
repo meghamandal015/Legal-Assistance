@@ -2,11 +2,25 @@
 
 import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
+import Navbar from "@/components/Navbar";
+
 
 // Dummy data for news items with bullet points
 const newsItems = [
   {
     id: 1,
+    title: "High Court Cannot Seek Explanation From Judicial Officer For Judicial Action",
+    date: "17-December-2024",
+    image: "/news3.jpg", // Placeholder image
+    link: "https://www.livelaw.in/top-stories/high-court-cannot-seek-explanation-from-judicial-officer-for-judicial-action-supreme-court-278652",
+    points: [
+        "Higher courts can't seek explanations for judicial decisions, only administratively.",
+        "Mandating formats in bail orders interferes with trial court discretion.",
+        "Supreme Court expunged High Court's adverse remarks on the judge.",
+    ],
+  },
+  {
+    id: 2,
     title: "Supreme Court Directs Union to Form Action Plan for Childcare Spaces in Public Buildings",
     date: "19-November-2024",
     image: "/news1.jpg", // Placeholder image
@@ -15,18 +29,6 @@ const newsItems = [
       "Supreme Court gives Union Government final chance to submit action plan for feeding and childcare spaces in public buildings.",
       "Court urges Union to coordinate with States for implementation in new and existing buildings.",
       "Lack of clear legal framework; Union directed to ensure action plan aligns with women's and child welfare policies.",
-    ],
-  },
-  {
-    id: 2,
-    title: "CCI Slaps Meta with Major Fine Over Data Sharing",
-    date: "19-November-2024",
-    image: "/news3.jpg", // Placeholder image
-    link: "https://lawtrend.in/cci-fines-meta-rs-213-crore-orders-whatsapp-to-halt-data-sharing-with-sister-companies/",
-    points: [
-        "CCI imposes a hefty Rs 213 crore fine on Meta Platforms Inc. for anti-competitive practices.",
-        "WhatsApp is ordered to stop data sharing with its sister companies.",
-        "CCI emphasizes user data privacy, tightening regulations on tech giants.",
     ],
   },
   {
@@ -73,6 +75,10 @@ export default function LatestNews() {
   }, [timelineRef]);
 
   return (
+    <>
+    <div className="fixed top-0 w-full z-50">
+      <Navbar />
+    </div>
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-600 overflow-hidden">
       {/* Header Section */}
       <div className="w-full py-8 sticky top-0 bg-[#1e293b] z-10">
@@ -117,5 +123,6 @@ export default function LatestNews() {
         ))}
       </div>
     </div>
+  </>
   );
 }

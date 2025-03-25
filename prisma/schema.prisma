@@ -8,13 +8,15 @@ generator client {
   provider = "prisma-client-js"
 }
 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+
 model User {
-  id                String    @id // Primary key with auto-generated UUID
+  id                String    @id
   email             String    @unique
   password          String
   fullname          String
@@ -31,33 +33,40 @@ model User {
   last_upload       DateTime?
   last_response     DateTime?
 
-  // Relationship fields
+
   activities        UserActivity[]
   currentData       UserCurrentData[]
 }
 
+
 model UserActivity {
-  Activityid            String    @id // Primary key with auto-generated UUID
+  Activityid            String    @id @default(cuid()) @map("_id")
   userId                String
   pdf_hosted_link       String
-  pdf_hosted_time       DateTime @default(now())
-  pdf_questions         String
-  pdf_answers           String
-  notice_response       String
-  notice_generate_time  DateTime? @default(now())
+  pdf_name              String
+  createdAt             DateTime  @default(now())
+  pdf_questions         String?
+  pdf_answers           String?
+  pdf_reasons           String?
+  isSummon              Boolean   @default(false)
+  notice_response       String?
 
-  // Foreign key relationship to User
+
   user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-model UserCurrentData {
-  DataId            String    @id// Primary key with auto-generated UUID
-  userId            String
-  current_question  String
-  current_reason    String
-  current_answer    String
-  current_notice    String
 
-  // Foreign key relationship to User
+model UserCurrentData {
+  DataId            String    @id
+  userId            String
+  notice_text       String?
+  current_question  String?
+  current_answer    String?
+  current_reason    String?
+  current_notice    String?
+  submitted_data    String?
+  num_of_words      String?
+
+
   user              User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

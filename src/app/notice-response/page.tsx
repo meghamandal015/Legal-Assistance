@@ -8,6 +8,11 @@ import { saveAs } from "file-saver";
 
 import { useSession } from "next-auth/react"
 import { useRouter } from 'next/navigation'
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// import Link from "next/link";
+import Navbar from "@/components/Navbar";
 
 export default function NoticeReply() {
   const { data: session } = useSession();
@@ -21,12 +26,12 @@ export default function NoticeReply() {
   const textContainerRef = useRef<HTMLDivElement>(null);
   const [isEdited, setIsEdited] = useState<boolean>(false);
 
+  // const userID = session ? session.user?.id : "";
 
   useEffect(() => {
     const initializeData = async () => {
       if (session) {
         const userID = session.user?.id;
-        console.log(userID) // Adjust based on how user ID is stored in session
         if (userID) {
               const response = await fetch('/api/getNotice', {
                 method: 'POST',
@@ -37,9 +42,9 @@ export default function NoticeReply() {
               });
           
               const result = await response.json();
-              console.log('Result:', result);
           
               // const { getReason } = result;
+              
               setResponse(result);
               setDisplayedText(result);
               setEditableText(result);
@@ -50,63 +55,59 @@ export default function NoticeReply() {
     initializeData();
   }, [session]);
 
+  const handleSaveNotice = async () => {
+    setIsEditing(false);
+    if (session && session.user?.id) {
+      const userID = session.user.id;
+      try {
+        const saveResponse = await fetch("/api/saveNotice", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ userID, notice: editableText }),
+        });
+  
+        if (saveResponse.ok) {
+          setDisplayedText(editableText);
+          setIsEdited(false);
+          toast.success('Notice saved successfully', {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+          });
+        } else {
+          toast.error('Failed to save notice');
+        }
+      } catch (error) {
+        console.error("Error saving notice:", error);
+        toast.error('An error occurred while saving the notice');
+      }
+    }
+  };
 
-  console.log(response);
-  console.log(displayedText);
-  console.log(isEdited);
-
-
-
-
-  // useEffect(() => {
-  //   if (response) {
-  //     const words = response.split(" ");
-  //     let currentWordIndex = 0;
-
-  //     const intervalId = setInterval(() => {
-  //       if (currentWordIndex < words.length) {
-  //         setDisplayedText((prevText) => `${prevText} ${words[currentWordIndex]}`);
-  //         currentWordIndex++;
-  //       } else {
-  //         clearInterval(intervalId);
-  //       }
-  //     }, 30);
-
-  //     return () => clearInterval(intervalId);
+  // const handleEditResponse = () => {
+  //   if (isEditing) {
+  //     setDisplayedText("");
   //   }
-  // }, [response]);
-
-  // useEffect(() => {
-  //   if (textContainerRef.current) {
-  //     textContainerRef.current.scrollTop = textContainerRef.current.scrollHeight;
-  //   }
-  // }, [displayedText]);
-
-
+  //   setIsEditing(!isEditing);
+  //   setIsEdited(true);
+  // };
   const handleEditResponse = () => {
     if (isEditing) {
-      setDisplayedText("");
+      handleSaveNotice();
+    } else {
+      setIsEditing(true);
+      setIsEdited(true);
     }
-    setIsEditing(!isEditing);
-    setIsEdited(true);
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setEditableText(e.target.value);
   };
-
-  // const handleReUpload = () => {
-  //   window.location.reload();
-  // };
-
-  // useEffect(() => {
-  //   const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-  //     event.preventDefault();
-  //     event.returnValue = "";
-  //   };
-  //   window.addEventListener("beforeunload", handleBeforeUnload);
-  //   return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  // }, []);
 
   const handleDownload = async (format: "docx" | "pdf") => {
     if (format === "docx") {
@@ -185,63 +186,64 @@ export default function NoticeReply() {
   };
 
   return (
-    <div className="h-screen flex flex-col items-center p-4 bg-transparent">
-      <>
-        {/* Main Content Section */}
-        <div className="mt-10 w-full max-w-4xl">
-          {/* Download Buttons Section */}
-          <div className="flex justify-end gap-4 mb-3">
+    <>
+      <div className="fixed top-0 w-full z-50">
+        <Navbar />
+      </div>
+      <div className="h-screen flex flex-col items-center p-6 bg-transparent">
+        <>
+          <div className="absolute top-8 right-4 flex gap-4 mt-24">
             <button
-              className="px-3 py-2 bg-gray-800 text-white rounded text-sm"
+              className="cursor-pointer px-4 py-2 bg-[#222] text-white rounded-md font-medium hover:bg-[#333] transition-all duration-[300ms] inline-block"
               onClick={() => handleDownload("docx")}
             >
               Download as Word (.docx)
             </button>
             <button
-              className="px-3 py-2 bg-gray-800 text-white rounded text-sm"
+              className="cursor-pointer px-4 py-2 bg-[#222] text-white rounded-md font-medium hover:bg-[#333] transition-all duration-[300ms] inline-block"
               onClick={() => handleDownload("pdf")}
             >
               Download as PDF (.pdf)
             </button>
           </div>
-  
-          {/* Text Container */}
+
           <div
             ref={textContainerRef}
-            className="w-full h-[350px] p-4 bg-gray-100 border border-gray-300 rounded overflow-y-auto"
+            className="mt-24 w-full h-[70%] max-w-4xl p-4 bg-gray-100 border border-gray-300 rounded overflow-y-auto "
           >
             {isEditing ? (
               <textarea
-                className="w-full h-full bg-transparent text-black resize-none outline-none text-sm"
+                className="w-full h-full bg-slate-200 text-black resize-none outline-none"
                 value={editableText}
                 onChange={handleTextChange}
               />
             ) : (
               <textarea
-                className="w-full h-full bg-transparent text-black resize-none outline-none text-sm"
+                className="w-full h-full bg-transparent text-black resize-none outline-none"
                 value={editableText}
                 readOnly
               />
             )}
           </div>
-  
-          {/* Action Buttons Section */}
-          <div className="mt-3 flex justify-center gap-3">
+
+          <div className="mt-4 flex gap-4">
+          
             <button
-              className="px-3 py-2 bg-gray-800 text-white rounded text-sm"
+              className="cursor-pointer px-4 py-2 bg-[#222] text-white rounded-md font-medium hover:bg-[#333] transition-all duration-[300ms] inline-block"
               onClick={handleEditResponse}
             >
               {isEditing ? "Save Response" : "Edit Response"}
             </button>
             <button
-              className="px-3 py-2 bg-gray-800 text-white rounded text-sm"
-              onClick={() => router.push("/notice-file-upload")}
+              className="cursor-pointer px-4 py-2 bg-[#222] text-white rounded-md font-medium hover:bg-[#333] transition-all duration-[300ms] inline-block"
+              onClick={() => router.push("/")}
             >
               Re-Upload
             </button>
           </div>
-        </div>
-      </>
+        </>
+        <ToastContainer />
     </div>
+    </>
   );
 };

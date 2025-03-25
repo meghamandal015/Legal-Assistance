@@ -3,12 +3,10 @@ import prisma from "@/lib/prisma";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        console.log("Request Body:", body);
 
         const { userID } = body;
 
         const dataId = "CD" + userID;
-        console.log("Data ID:", dataId);
 
         const existingData = await prisma.userCurrentData.findFirst({
             where: {
@@ -17,11 +15,8 @@ export async function POST(request: Request) {
             }
         });
 
-        console.log("Existing Data:", existingData);
 
         const notice_response = existingData?.current_notice;
-
-        console.log("Notice Response:", notice_response);
 
         return new Response(
             JSON.stringify(notice_response),

@@ -1,23 +1,60 @@
 "use client";
 
 import React from "react";
-
-import { useSession } from "next-auth/react"
-
+import { useEffect, useState } from "react";
+import Navbar from "@/components/Navbar"; // Importing Navbar component
+import { useSession } from "next-auth/react";
 import { handleSignOut } from "../actions/authActions";
 
-export default function ProfilePage() {
+interface HistoryItem {
+  pdf_upload_count: number;
+  notice_generate_count:  number;
+}
 
-  
+export default function ProfilePage() {
   const { data: session } = useSession();
+  const [countData, setCountData] = useState<HistoryItem[]>([]);
+  const [pdfUploadCount, setPdfUploadCount] = useState<number>(0);
+  const [noticeGenerateCount, setNoticeGenerateCount] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!session?.user?.id) return;
+
+      try {
+        const response = await fetch('/api/getUploadCount', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userID: session.user.id
+          })
+        });
+
+        const data = await response.json();
+        setCountData(data.data);
+        setPdfUploadCount(data.data.pdf_upload_count);
+        setNoticeGenerateCount(data.data.notice_generate_count);
+      } catch (error) {
+        console.error('Failed to fetch history:', error);
+      }
+    };
+
+    fetchData();
+  }, [session]);
+
   const onSignOut = async () => {
-    await handleSignOut(); // Call the sign-out function
-    // Force a full reload // Refresh the current page
-    // Alternatively, redirect to another page like login
-    // router.push("/login");
+    await handleSignOut();
+    window.location.reload();
+    window.location.href = "/";
   };
 
   return (
+    <>
+    <div className="fixed top-0 w-full z-50">
+      <Navbar />
+    </div>
     <div className="min-h-screen bg-gradient-to-br from-blue-600 via-indigo-500 to-purple-600 overflow-hidden">
       {/* Header Section */}
       <div className="w-full bg-[#1e293b] py-8">
@@ -69,5 +106,6 @@ export default function ProfilePage() {
         </div>
       </div>
     </div>
+  </>
   );
 }

@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef, FormEvent } from "react";
 import axios from "axios";
 import ReactMarkdown from 'react-markdown';
 import Image from 'next/image';
+import Navbar from "@/components/Navbar";
+
+
 
 interface ChatMessage {
   user: string;
@@ -79,112 +82,119 @@ export default function Chat() {
   };
 
 return (
-  <div className="flex min-h-screen bg-gray-900 text-white">
-    {/* Sidebar */}
-    <div
-      className={`fixed top-[90px] left-0 bg-gray-800 p-4 transition-transform ${
-        sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      } w-[200px] h-[calc(100vh)] flex flex-col`}
-    >
-      {/* Fixed Section (Menu icon and New Chat button) */}
-      <div className="flex-shrink-0">
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="text-white mb-4"
-        >
-          <Image src="/menu_icon.png" alt="Menu" width={36} height={36} />
-        </button>
-
-        <button
-          onClick={handleNewChat}
-          className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 flex items-center"
-        >
-          <Image
-            src="/plus_icon.png"
-            alt="New Chat"
-            width={24}
-            height={24}
-            className="mr-2"
-          />
-          New Chat
-        </button>
-      </div>
-
-      {/* Scrollable Section (Recent Prompts) */}
-      <div className="flex-grow overflow-y-auto">
-        <h3 className="text-md font-semibold mb-2">Recent Prompts</h3>
-        {recentPrompts.length > 0 ? (
-          <ul className="break-words">
-            {recentPrompts.map((prompt, index) => (
-              <li key={index} className="flex items-center cursor-pointer mb-2" onClick={() => handlePromptClick(prompt)}>
-                <Image src="/message_icon.png" alt="Message Icon" width={30} height={30} className="mr-2 opacity-100" />
-                <span className="text-blue-500">{prompt}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p>No recent prompts available</p>
-        )}
-      </div>
+  <div className="min-h-screen bg-gray-900">
+    <div className="fixed top-0 w-full z-50 bg-gradient-to-r from-blue-500 to-blue-600">
+      <Navbar />
     </div>
-
-    {/* Main Chat Area */}
-    <div className="flex flex-col items-center pb-4 pt-[calc(70px + 50px)] justify-between flex-1">
-      {!sidebarOpen && (
-        <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="fixed top-[110px] left-4 z-10"
-        >
-          <Image src="/menu_icon.png" alt="Menu" width={36} height={36} />
-        </button>
-      )}
-
-      {/* Chat Container */}
+    
+    <div className="flex">
+      {/* Sidebar */}
       <div
-        ref={chatContainerRef}
-        className="flex flex-col w-full max-w-3xl p-4 mt-4 overflow-y-auto mb-16"
-        style={{ minHeight: 'calc(100vh - 150px)', maxHeight: 'calc(100vh - 150px)' }}
+        className={`fixed top-[90px] left-0 bg-gray-800 p-4 transition-transform duration-300 ease-in-out ${
+          sidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } w-[200px] h-[calc(100vh)] flex flex-col`}
       >
-        {chat.map((chatItem, index) => (
-          <div
-            key={index}
-            className={`chat-message ${
-              chatItem.user === "User"
-                ? "self-end bg-blue-500 text-white"
-                : "self-start bg-gray-700 text-white"
-            } p-3 rounded mb-4 mt-4 w-fit max-w-[75%]`}  // Added mt-4 and mb-4 for vertical spacing
+        <div className="flex-shrink-0">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-white mb-4"
           >
-            <ReactMarkdown>{chatItem.message}</ReactMarkdown>
-          </div>
-        ))}
+            <Image src="/menu_icon.png" alt="Menu" width={36} height={36} />
+          </button>
+
+          <button
+            onClick={handleNewChat}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md mb-4 flex items-center"
+          >
+            <Image
+              src="/plus_icon.png"
+              alt="New Chat"
+              width={24}
+              height={24}
+              className="mr-2"
+            />
+            New Chat
+          </button>
+        </div>
+        <div className="flex-grow overflow-y-auto">
+          <h3 className="text-white text-md font-semibold mb-2">Recent Prompts</h3>
+          {recentPrompts.length > 0 ? (
+            <ul className="break-words">
+              {recentPrompts.map((prompt, index) => (
+                <li key={index} className="flex items-center cursor-pointer mb-2" onClick={() => handlePromptClick(prompt)}>
+                  <Image src="/message_icon.png" alt="Message Icon" width={30} height={30} className="mr-2 opacity-100" />
+                  <span className="text-white">{prompt}</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-white">No recent prompts available</p>
+          )}
+        </div>
       </div>
 
-      {/* User Input Form */}
-      <form
-        onSubmit={handleSubmit}
-        className="fixed bottom-0 w-full max-w-3xl bg-gray-800 p-3 mb-5 flex border border-gray-600 rounded z-20"
-      >
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask a question..."
-          className="flex-grow p-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500 mr-2"
-          required
-          disabled={isLoading}
-        />
+      {/* Main Content */}
+      <div className="flex-1 ml-0">
+        {/* Toggle Sidebar Button */}
         <button
-          type="submit"
-          className={`bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 transition ${
-            isLoading ? "opacity-50 cursor-not-allowed" : ""
-          }`}
-          disabled={isLoading}
+          onClick={() => setSidebarOpen(!sidebarOpen)}
+          className="fixed top-[100px] left-4 z-40 bg-gray-800 p-2 rounded-md"
         >
-          {isLoading ? "Sending..." : "Send"}
+          <Image src="/menu_icon.png" alt="Menu" width={30} height={30} />
         </button>
-      </form>
+
+        {/* Chat Container */}
+        <div className="max-w-4xl mx-auto px-4 pt-[100px]">
+          <div
+            ref={chatContainerRef}
+            className="min-h-[calc(100vh-200px)] max-h-[calc(100vh-200px)] overflow-y-auto"
+          >
+            {chat.map((msg, index) => (
+              <div
+                key={index}
+                className={`mb-4 ${
+                  msg.user === "User" ? "text-right" : "text-left"
+                }`}
+              >
+                <div
+                  className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                    msg.user === "User"
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-700 text-white"
+                  }`}
+                >
+                  <ReactMarkdown>{msg.message}</ReactMarkdown>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Input Form */}
+          <form
+            onSubmit={handleSubmit}
+            className="fixed bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-3xl px-4"
+          >
+            <div className="flex gap-2 bg-gray-800 p-2 rounded-lg">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 bg-gray-700 text-white rounded px-4 py-2 focus:outline-none"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 transition-colors"
+              >
+                {isLoading ? "Sending..." : "Send"}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
     </div>
   </div>
 );
-
 }

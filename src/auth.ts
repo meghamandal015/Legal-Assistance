@@ -6,6 +6,7 @@ import bcryptjs from "bcryptjs";
 import { CredentialsSignin } from "next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  debug: true,
   providers: [
     Credentials({
       credentials: {
@@ -13,7 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Password", type: "password" },
       },
 
-      async authorize(credentials: any, req): Promise<any> {
+      async authorize(credentials: any): Promise<any> {
         const user = await prisma.user.findUnique({
           where: {
             email: credentials.email,
@@ -43,7 +44,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   callbacks: {
     async jwt({token, user}) {
       if (user) {
-        console.log('User:', user);
         token.id = user.id as string
         token.email = user.email as string
         token.fullname = user.fullname as string
@@ -55,6 +55,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.last_logout = user.last_logout ? user.last_logout as Date : undefined
         token.pdf_upload_count = user.pdf_upload_count as number
         token.notice_generate_count = user.notice_generate_count as number
+        token.emailVerified = user.isEmailVerified ? new Date() : null
       }
       return token
     },
@@ -72,9 +73,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         last_logout: token.last_logout,
         pdf_upload_count: token.pdf_upload_count,
         notice_generate_count: token.notice_generate_count,
+        emailVerified: token.isEmailVerified ? new Date() : null
+
       }
       return session
     }
   },
   secret: process.env.AUTH_SECRET,
 })
+
